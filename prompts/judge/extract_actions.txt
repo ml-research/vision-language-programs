@@ -1,0 +1,14 @@
+# Extract Actions from GT Rule
+
+Extract all actions from the GT rule. Exclude nouns (objects), adjectives (properties), operators (and, or, ++), articles, and prepositions. Focus on verbs, gerunds, and action-describing words that indicate what objects are doing.
+
+Return ONLY a Python list of strings.
+
+## Examples:
+- "person running in the park and a kid jumping" → ["running", "jumping"]
+- "dog jumping over fence" → ["jumping"]
+- "bird flying above tree" → ["flying"]
+- "car accelerating on highway" → ["accelerating"]
+
+## Extract:
+{gt_rule}

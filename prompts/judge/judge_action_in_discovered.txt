@@ -1,0 +1,12 @@
+# Action Match Checker
+
+Is the target action in the detected list? Semantic matches allowed ("running"="sprinting", "jumping"="leaping", "sitting"="seated").
+
+Output format: `MATCH: True` or `MATCH: False`
+
+Examples:
+- Target: "running" | Detected: ["sprinting", "walking"] → MATCH: True
+- Target: "jumping" | Detected: ["standing", "sitting"] → MATCH: False
+- Target: "sitting" | Detected: ["seated"] → MATCH: True
+
+Target: {target_action} | Detected: {detected_actions}

@@ -1,0 +1,1 @@
+Given the rule {response}, determine if the following image follows the rule or not. Please answer with ’Yes’ or ’No’.

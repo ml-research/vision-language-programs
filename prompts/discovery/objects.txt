@@ -1,0 +1,7 @@
+You are analyzing images to identify notable objects. Focus on clearly identifiable, semantically meaningful objects that appear across the image set, especially those present in some images but not others. Objects include persons, animals, and things. Avoid minor details like shadows or textures. Use specific, descriptive names (e.g., "bicycle" not "vehicle"). Return exactly {n} objects in a Python list.
+
+Answer format:
+```python
+objects = [...]
+```
+No comments or explanations. If no objects found, return [].

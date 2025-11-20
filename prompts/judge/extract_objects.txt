@@ -1,0 +1,14 @@
+# Extract Objects from GT Rule
+
+Extract all physical objects from the GT rule. Exclude verbs, operators (and, or, ++), articles, prepositions, and abstract concepts. Keep compound nouns together (e.g., "traffic light").
+
+Return ONLY a Python list of strings.
+
+## Examples:
+- "praying mantis hanging plant" → ["praying mantis", "plant"]
+- "metal cube and blue sphere" → ["cube", "sphere"]
+- "person with umbrella walking" → ["person", "umbrella"]
+- "red car parked near traffic light" → ["car", "traffic light"]
+
+## Extract:
+{gt_rule}

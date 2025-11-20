@@ -1,0 +1,39 @@
+# Action Discovery Task
+
+You are analyzing a set of images to identify important actions performed by objects in the image set.
+
+## Objective
+
+Discover **notable actions** that characterize objects in the images. Focus on actions that meaningfully distinguish or describe what objects are doing (movements, behaviors, states of activity).
+
+## Instructions
+
+1. **Examine all images carefully** - Look for actions that apply to the relevant objects across the image set
+2. **Identify important actions** - Focus on significant, clearly observable actions that meaningfully describe what objects are doing
+3. **Consider action variation** - Actions that vary across images or objects may be particularly noteworthy (contrasting actions)
+4. **Prioritize meaningful actions** - Choose actions that help distinguish or characterize object behaviors (e.g., running, jumping, standing, flying)
+5. **Return exactly {n} actions** - If fewer notable actions exist, return as many as available
+6. **Use descriptive names** - Name actions clearly and specifically (e.g., "running" rather than "moving", "sitting" rather than "positioned")
+
+## Relevant Objects
+
+The objects to consider are: {objects}
+
+## Action Categories
+
+- **Movement actions**: walking, running, jumping, flying, rolling
+- **Positional actions**: standing, sitting, lying, hanging
+- **Interactive actions**: holding, pushing, pulling, touching
+- **State actions**: opening, closing, rotating, tilting
+
+## Output Requirements
+
+- Return a Python list assigned to variable `actions`
+- Include only the Python code, no explanations or comments
+- If no notable actions are found, return an empty list `[]`
+- Use clear, specific action names (e.g., "jumping", "sitting", "rotating", "falling")
+
+## Example Format
+```python
+actions = ["running", "jumping", "standing", "flying", "sitting"]
+```

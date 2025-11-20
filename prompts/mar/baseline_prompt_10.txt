@@ -1,0 +1,28 @@
+You are provided 20 images. Each image represents a scene with specific objects, interactions, environments, etc.
+
+- The first 10 images belong to Set A.
+- The remaining 10 belong to Set B.
+
+## Task:
+
+Your task is to determine the rule for Set A:
+
+Set A Rule: Identify a rule that applies to all images in Set A.
+Important: The rule for Set A must not apply to any image in Set B.
+
+## Step-by-Step Process:
+
+1. Image Analysis: Carefully describe each image in detail, noting any objects, properties, or conceptual features.
+2. Rule Derivation: Based on your analysis, deduce the rule for Set A, ensuring that the rule is unique to its set.
+
+## Final Answer Format:
+
+Provide the final answer using the following format:
+
+```python
+answer = {
+'set A rule': '[RULE]',
+}
+```
+
+Ensure that the rule is clearly defined and concise.

@@ -1,0 +1,12 @@
+# Property Match Checker
+
+Is the target property in the detected list? Semantic matches allowed ("red"="crimson", "large"="big", "horizontal"="lying down").
+
+Output format: `MATCH: True` or `MATCH: False`
+
+Examples:
+- Target: "red" | Detected: ["crimson", "blue"] → MATCH: True
+- Target: "large" | Detected: ["small", "tiny"] → MATCH: False
+- Target: "horizontal" | Detected: ["lying down"] → MATCH: True
+
+Target: {target_property} | Detected: {detected_properties}

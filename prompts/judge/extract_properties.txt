@@ -1,0 +1,14 @@
+# Extract Properties from GT Rule
+
+Extract all properties from the GT rule. Exclude nouns (objects), verbs, operators (and, or, ++), articles, and prepositions. Focus on adjectives, colors, states, sizes, positions, and descriptive attributes.
+
+Return ONLY a Python list of strings.
+
+## Examples:
+- "praying mantis hanging plant" → ["hanging"]
+- "metal cube and blue sphere" → ["metal", "blue"]
+- "person with umbrella walking" → ["walking"]
+- "red car parked near traffic light" → ["red", "parked", "near"]
+
+## Extract:
+{gt_rule}

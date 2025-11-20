@@ -1,0 +1,12 @@
+# Object Match Checker
+
+Is the target object in the detected list? Semantic matches allowed ("cat"="kitten", "car"="automobile").
+
+Output format: `MATCH: True` or `MATCH: False`
+
+Examples:
+- Target: "cat" | Detected: ["kitten", "dog"] → MATCH: True
+- Target: "blue sphere" | Detected: ["red sphere"] → MATCH: False
+- Target: "automobile" | Detected: ["car"] → MATCH: True
+
+Target: {target_object} | Detected: {detected_objects}

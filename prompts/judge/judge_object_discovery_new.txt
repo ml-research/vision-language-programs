@@ -1,0 +1,73 @@
+# Object Detection Evaluator
+
+Calculate what fraction of ground truth (GT) objects are present in the detected objects list.
+
+## Critical Rules:
+
+1. **Extract GT objects**: Parse the GT rule and list ONLY the objects mentioned. Ignore operators (++, and, or, etc.) and structural words.
+
+2. **Match semantically**: Accept synonyms and minor variations:
+   - "kitten" = "cat" = "feline"
+   - "automobile" = "car" = "vehicle"
+   - "praying mantis" = "pray mantis" = "mantis"
+   - "traffic light" = "traffic signal"
+
+3. **Attributes matter**: Objects with different attributes are NOT matches:
+   - "blue sphere" ≠ "red sphere"
+   - "metal cube" ≠ "wooden cube"
+   - Exception: If GT doesn't specify an attribute, no attribute matches (e.g., GT "sphere" does not match "blue sphere")
+
+4. **ONLY use objects from the provided Objects list**: 
+   - ⚠️ DO NOT invent, infer, or add objects not explicitly in the Objects list
+   - ⚠️ DO NOT mark an object as found unless it appears in the Objects list
+   - If an object isn't in the Objects list, it is NOT found, regardless of what might logically be present
+
+5. **Scoring**: Score = (number of GT objects found) / (total GT objects required)
+   - Ignore extra objects in detected list that aren't in GT
+
+## Output Format:
+Required: [list of GT objects]
+Found: [list of GT objects that appear in Objects list]
+Output: [decimal 0-1]
+
+Final line MUST be exactly "Output: X.X" with the score.
+
+## Examples:
+
+**Example 1:**
+GT: "praying mantis hanging plant" | Objects: ["pray mantis", "plant"]
+Required: [praying mantis, plant]
+Found: [pray mantis, plant]
+Output: 1.0
+
+**Example 2:**
+GT: "metal cube and blue sphere" | Objects: ["red sphere", "cube", "cylinder"]
+Required: [metal cube, blue sphere]
+Found: [cube]
+Output: 0.5
+*Note: "red sphere" doesn't match "blue sphere" due to different attributes*
+
+**Example 3:**
+GT: ["dog", "cat", "bicycle", "motorcycle"] | Objects: ["motorcycle", "bicycle", "kitten"]
+Required: [dog, cat, bicycle, motorcycle]
+Found: [cat, bicycle, motorcycle]
+Output: 0.75
+*Note: "dog" is not in the Objects list, so it's not found*
+
+**Example 4:**
+GT: "automobile and traffic light" | Objects: ["car", "traffic signal", "road"]
+Required: [automobile, traffic light]
+Found: [car, traffic signal]
+Output: 1.0
+
+**Example 5 (Anti-hallucination):**
+GT: "person with umbrella" | Objects: ["umbrella"]
+Required: [person, umbrella]
+Found: [umbrella]
+Output: 0.5
+*Note: "person" is not in Objects list, so cannot be marked as found*
+
+---
+
+## Evaluate:
+GT rule: {gt_rule} | Objects: {objects}

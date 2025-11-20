@@ -1,0 +1,32 @@
+You are given {n} images. Each image depicts a scene with specific objects, interactions, and environments.
+Your task is to determine the underlying concept that distinguishes the positive examples from the negative examples, based on the objects, their properties, and the actions occurring in each scene.
+
+- The first {m} images are positive examples.
+- The remaining {o} images are negative examples.
+
+## Task
+
+Identify the rule that defines the positive examples:
+- The rule must apply to all positive examples.
+- The rule must not apply to any negative example.
+
+## Step-by-Step Process
+
+1. Image Analysis:
+- Carefully describe each image, noting objects, their attributes, and conceptual features (such as relationships, actions, or settings).
+
+2. Rule Derivation:
+- From your analysis, infer the rule that uniquely characterizes the positive examples.
+- Confirm that the rule does not hold for the negative examples.
+
+## Final Answer Format
+
+Provide your final answer in the following format:
+
+```python
+answer = {
+'rule': '[RULE]',
+}
+```
+
+Ensure that the rule is clearly defined and concise.

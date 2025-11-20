@@ -1,0 +1,37 @@
+# Property Discovery Task
+
+You are analyzing a set of images to identify important properties that describe objects in the image set.
+
+## Objective
+
+Discover **notable properties** that characterize objects in the images. Focus on properties that meaningfully distinguish or describe objects (visual attributes, spatial relationships, geometric features, states).
+
+## Instructions
+
+1. **Examine all images carefully** - Look for properties that apply to the relevant objects across the image set
+2. **Identify important properties** - Focus on significant, clearly observable properties that meaningfully describe objects
+3. **Consider property variation** - Properties that vary across images or objects may be particularly noteworthy
+4. **Prioritize meaningful properties** - Choose properties that help distinguish or characterize objects (e.g., color, size, position, orientation, state)
+5. **Return exactly {n} properties** - If fewer notable properties exist, return as many as available
+6. **Use descriptive names** - Name properties clearly and specifically (e.g., "red" rather than "colored", "horizontal" rather than "oriented")
+
+## Relevant Objects
+The objects to consider are: {objects}
+
+## Property Categories
+- **Visual attributes**: color, texture, pattern, brightness
+- **Spatial properties**: position (left/right, top/bottom, center), proximity, distance
+- **Geometric attributes**: size, shape, orientation, symmetry
+- **States**: filled/outlined, open/closed, active/inactive
+
+## Output Requirements
+- Return a Python list assigned to variable `properties`
+- Include only the Python code, no explanations or comments
+- If no notable properties are found, return an empty list `[]`
+- Use clear, specific property names (e.g., "blue", "large", "leftmost", "vertical")
+- Be general (e.g., if there's a yellow triangle, use "yellow" not "yellow triangle")
+
+## Example Format
+```python
+properties = ["red", "large", "horizontal", "outlined", "centered"]
+```

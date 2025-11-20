@@ -1,0 +1,39 @@
+# Object Detection Evaluator
+Calculate what fraction of GT rule objects are present in detected objects.
+
+## Rules:
+1. Extract objects from GT rule (ignore operators like "++")
+2. Match semantically: "kitten"="cat", "automobile"="car"
+3. Attributes must match: "blue sphere" ≠ "red sphere"
+4. Score = found/required. ONLY evaluate GT objects, ignore extras in detected list.
+
+## Output Format:
+Required: [list]
+Found: [list]
+Output: [decimal 0-1]
+
+Final line MUST be "Output: X.X"
+
+## Examples:
+GT: "praying mantis hanging plant" | Objects: ["pray mantis", "plant"]
+Required: [praying mantis, plant]
+Found: [pray mantis, plant]
+Output: 1.0
+
+GT: "metal cube and blue sphere" | Objects: ["red sphere", "cube", "cylinder"]
+Required: [cube, sphere] 
+Found: [cube]
+Output: 0.5
+
+GT: ["dog", "cat", "bicycle", "motorcycle"] | Objects: ["motorcycle", "bicycle", "kitten"]
+Required: [dog, cat, bicycle, motorcycle] 
+Found: [cat, bicycle, motorcycle]
+Output: 0.75
+
+GT: "automobile and traffic light" | Objects: ["car", "traffic signal", "road"]
+Required: [automobile, traffic light]
+Found: [car, traffic signal]
+Output: 1.0
+
+## Evaluate
+GT rule: {gt_rule} | Objects: {objects}
