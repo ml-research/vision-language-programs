@@ -68,10 +68,7 @@ body {
 .publication-authors {}
 
 .publication-authors a {
-  /*color: hsl(204, 86%, 53%) !important;*/
-  color: #0cc8cc;
-  color: #0dc4e1;
-  color: #e08b4a;
+  color: #0f5a8a;
 }
 
 .publication-authors a:hover {
@@ -155,5 +152,57 @@ body {
 }
 
 .motivation-image {
-  width: 65%;
+  width: 88%;
+}
+
+.vlp-hero {
+  background: linear-gradient(135deg, #f6fbff 0%, #eef5ff 45%, #ffffff 100%);
+}
+
+.accent-tag {
+  border-radius: 999px;
+  color: #0f3f5d !important;
+  border: 1px solid #c9d9e8;
+}
+
+.highlight-card {
+  background: #ffffff;
+  border: 1px solid #e8e8ef;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04);
+}
+
+.highlight-card ul {
+  margin-bottom: 0.5rem;
+}
+
+.equal-height {
+  height: 100%;
+}
+
+.stat-badges {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 0.5rem;
+}
+
+.stat-badge {
+  background: #0f3f5d;
+  color: #ffffff;
+  border-radius: 10px;
+  padding: 0.75rem;
+  text-align: center;
+}
+
+.stat-number {
+  display: block;
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.stat-label {
+  display: block;
+  font-size: 0.9rem;
+  opacity: 0.85;
 }
