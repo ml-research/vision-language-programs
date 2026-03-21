@@ -1,13 +1,13 @@
 # Vision-Language Programs
 
-Vision-Language Programs (VLP) is a framwork for inducing executable programs that explain Bongard-like visual reasoning tasks. The system combines vision-language models (VLMs) with a symbolic DSL, and searches for structured programs that satisfy a dataset’s positive/negative image constraints. This repository contains the full training, inference, and evaluation stack used in our experiments.
+This is the official repository for the paper [Synthesizing Visual Concepts as Vision-Language Programs](https://arxiv.org/abs/2511.18964). Vision-Language Programs (VLP) is a framwork for inducing executable programs that explain Bongard-like visual reasoning tasks. The system combines vision-language models (VLMs) with a symbolic DSL, and searches for structured programs that satisfy a dataset’s positive/negative image constraints. This repository contains the full training, inference, and evaluation stack used in our experiments.
 
 ## Repository Layout
 
 | Path | Description |
 | --- | --- |
 | `main.py`,| End-to-end pipeline that orchestrate symbol grounding, DSL construction, and program search. |
-| `method/` | DSL definitions, program search algorithms, grammar utilities, and type system. |
+| `method/` | DSL definitions, program search algorithms, grammar utilities, and type system. The code is based on and adapted from [DeepSynth](https://github.com/nathanael-fijalkow/DeepSynth).|
 | `models/` | Prompter implementations for each supported VLM, including caching logic in `models/*/memory/`. |
 | `prompts/` | Prompt templates for variable discovery, baselines, judgment etc.. |
 | `utils/` | Argument parsing, dataset helpers, prompter factory, and GPU reservation utilities. |
@@ -143,4 +143,15 @@ python run_single_task.py --dataset bongard-op --model Qwen2.5-VL-7B-Instruct --
 - **DSL extensions:** Add new primitives under `method/DSL/` and update the semantics/types so they appear in the CFG (see `method/DSL/dsl_with_img_repr.py` for reference).
 - **Additional VLMs:** Implement a new prompter in `models/<name>/main.py` that exposes `prompt_with_images`, register it in `utils/prompters.get_prompter`, and add any required dependencies to `requirements.txt`.
 - **Caching:** Every prompter writes JSON files under `models/<model>/memory/<dataset>/` to avoid repeated API calls.
+
+## Citation
+If you find this work helpful, consider citing it.
+```
+@article{wuest2025synthesizing,
+  title        = {Synthesizing Visual Concepts as Vision-Language Programs},
+  author       = {Antonia W\"ust and Wolfgang Stammer and Hikaru Shindo and Lukas Helff and Devendra Singh Dhami and Kristian Kersting},
+  journal      = {2025},
+  howpublished = {arXiv preprint arXiv:2511.18964},
+}
+```
 
