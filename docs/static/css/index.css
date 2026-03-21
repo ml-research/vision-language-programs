@@ -156,12 +156,13 @@ body {
 }
 
 .vlp-hero {
-  background: linear-gradient(135deg, #fff7e6 0%, #f6fbff 45%, #eef5ff 80%, #ffffff 100%);
+  background: linear-gradient(135deg, #f5f0ff 0%, #f8fff8 70%, #ffffff 100%);
 }
+
 
 .accent-tag {
   border-radius: 999px;
-  color: #0f3f5d !important;
+  color: #440f5d !important;
   border: 1px solid #c9d9e8;
 }
 

@@ -1,0 +1,1796 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>VLP – Method Animation</title>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800;900&family=JetBrains+Mono:wght@400;600;700&display=swap"
+    rel="stylesheet">
+  <style>
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --bg: #f8fafc;
+      --surface: #ffffff;
+      --border: rgba(15, 23, 42, 0.09);
+      --text: #0f172a;
+      --muted: #64748b;
+      --blue: #2563eb;
+      --purple: #7c3aed;
+      --amber: #d97706;
+      --green: #059669;
+    }
+
+    html,
+    body {
+      width: 100%;
+      min-height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', system-ui, sans-serif;
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      background-image:
+        linear-gradient(rgba(15, 23, 42, 0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(15, 23, 42, 0.04) 1px, transparent 1px);
+      background-size: 48px 48px;
+    }
+
+    #app {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 28px 48px 48px;
+    }
+
+    /* ── Phase badge ── */
+    #title-wrap {
+      text-align: center;
+      margin-bottom: 24px;
+    }
+    /* When embedded: hide title, tighten padding */
+    body.in-iframe #title-wrap { display: none; }
+    body.in-iframe #app { padding: 16px 32px 24px; }
+
+    #main-title {
+      font-size: 1.5rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, #0f172a 0%, #475569 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 5px;
+    }
+
+    #main-sub {
+      font-size: 0.78rem;
+      color: var(--muted);
+      max-width: 560px;
+      line-height: 1.6;
+    }
+
+    /* ── Content wrapper ── */
+    #content-wrapper {
+      position: relative;
+      width: 100%;
+      max-width: 920px;
+      transition: height 0.7s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* ════════════════════════════════════════
+       GROUNDING SECTION
+    ════════════════════════════════════════ */
+    #grounding-section {
+      width: 100%;
+      transition: opacity 0.6s ease, transform 0.6s ease, filter 0.6s ease;
+    }
+
+    #grounding-section.out {
+      opacity: 0;
+      transform: translateY(-12px) scale(0.97);
+      filter: blur(3px);
+      pointer-events: none;
+      position: absolute; /* remove from flow so search section rises up */
+      top: 0;
+    }
+
+    .s1-flow {
+      display: grid;
+      grid-template-columns: 192px 68px 148px 68px 242px;
+      gap: 0;
+      align-items: center;
+      width: 100%;
+    }
+
+    /* Task box */
+    .task-box {
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      border-radius: 14px;
+      padding: 12px;
+    }
+
+    .task-title {
+      font-size: 0.59rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+
+    .img-col-label {
+      font-size: 0.57rem;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+
+    .img-col-label.pos {
+      color: #16a34a;
+    }
+
+    .img-col-label.neg {
+      color: #dc2626;
+    }
+
+    .img-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 3px;
+      margin-bottom: 6px;
+    }
+
+    .img-grid svg {
+      display: block;
+      width: 100%;
+      border-radius: 4px;
+    }
+
+    /* Connector */
+    .conn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      padding: 0 6px;
+    }
+
+    .conn-lbl {
+      font-size: 0.57rem;
+      color: var(--muted);
+      text-align: center;
+      line-height: 1.4;
+    }
+
+    .conn-line {
+      position: relative;
+      width: 100%;
+      height: 2px;
+      background: rgba(15, 23, 42, 0.12);
+      transition: background 0.5s ease;
+    }
+
+    .conn-line::after {
+      content: '▶';
+      position: absolute;
+      right: -7px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 0.6rem;
+      color: rgba(15, 23, 42, 0.2);
+      transition: color 0.5s ease;
+    }
+
+    .conn-line.lit {
+      background: linear-gradient(90deg, rgba(217, 119, 6, 0), rgba(217, 119, 6, 0.55), rgba(217, 119, 6, 0));
+    }
+
+    .conn-line.lit::after {
+      color: var(--amber);
+    }
+
+    /* VLM box */
+    .vlm-box {
+      background: linear-gradient(160deg, #ecfeff, #cffafe);
+      border: 2px solid rgba(8, 145, 178, 0.35);
+      border-radius: 14px;
+      padding: 14px 10px;
+      text-align: center;
+      transition: box-shadow 0.5s, border-color 0.5s;
+    }
+
+    .vlm-box.live {
+      animation: vlmPulse 1.8s ease infinite;
+    }
+
+    @keyframes vlmPulse {
+
+      0%,
+      100% {
+        box-shadow: 0 0 0 0 rgba(8, 145, 178, 0.2);
+        border-color: rgba(8, 145, 178, 0.35);
+      }
+
+      50% {
+        box-shadow: 0 0 14px 3px rgba(8, 145, 178, 0.12);
+        border-color: rgba(8, 145, 178, 0.7);
+      }
+    }
+
+    .vlm-badge {
+      display: inline-block;
+      padding: 3px 9px;
+      border-radius: 999px;
+      background: rgba(8, 145, 178, 0.1);
+      border: 1px solid rgba(8, 145, 178, 0.25);
+      font-size: 0.57rem;
+      font-weight: 700;
+      color: #0e7490;
+      margin-bottom: 6px;
+    }
+
+    .vlm-name {
+      font-size: 1rem;
+      font-weight: 800;
+      color: #0e7490;
+      margin-bottom: 6px;
+    }
+
+    .vlm-tags {
+      display: flex;
+      justify-content: center;
+      gap: 5px;
+      flex-wrap: wrap;
+    }
+
+    .vlm-tag {
+      padding: 2px 7px;
+      border-radius: 4px;
+      background: rgba(255, 255, 255, 0.7);
+      border: 1px solid rgba(8, 145, 178, 0.18);
+      font-size: 0.57rem;
+      color: #0e7490;
+    }
+
+    /* Symbols panel */
+    .sym-panel {
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      border-radius: 14px;
+      padding: 12px;
+    }
+
+    .sym-grp {
+      margin-bottom: 8px;
+    }
+
+    .sym-grp:last-child {
+      margin-bottom: 0;
+    }
+
+    .sym-lbl {
+      font-size: 0.55rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+      margin-bottom: 4px;
+    }
+
+    .chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 3px;
+    }
+
+    .chip {
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-size: 0.59rem;
+      font-weight: 600;
+    }
+
+    .chip.obj {
+      background: rgba(29, 78, 216, 0.09);
+      border: 1px solid rgba(29, 78, 216, 0.2);
+      color: #1d4ed8;
+    }
+
+    .chip.prop {
+      background: rgba(29, 78, 216, 0.09);
+      border: 1px solid rgba(29, 78, 216, 0.2);
+      color: #1d4ed8;
+    }
+
+    .chip.act {
+      background: rgba(29, 78, 216, 0.09);
+      border: 1px solid rgba(29, 78, 216, 0.2);
+      color: #1d4ed8;
+    }
+
+    /* ════════════════════════════════════════
+       SEARCH SECTION (hidden initially)
+    ════════════════════════════════════════ */
+    #search-section {
+      width: 100%;
+      opacity: 0;
+      transition: opacity 0.65s ease, transform 0.65s ease;
+      transform: translateY(16px);
+    }
+
+    #search-section.shown {
+      opacity: 1;
+      transform: none;
+    }
+
+    /* Few-shot strip */
+    #fewshot-strip {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      padding: 8px 14px;
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      border-radius: 12px;
+      margin-bottom: 12px;
+    }
+
+    .fewshot-lbl {
+      font-size: 0.57rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      color: var(--muted);
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .fewshot-group {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .fewshot-sign {
+      font-size: 0.62rem;
+      font-weight: 800;
+      width: 10px;
+      text-align: center;
+      flex-shrink: 0;
+    }
+
+    .fewshot-sign.pos {
+      color: #059669;
+    }
+
+    .fewshot-sign.neg {
+      color: #e11d48;
+    }
+
+    .fewshot-img {
+      width: 36px;
+      height: 36px;
+      border-radius: 5px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+
+    .fewshot-img svg {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    .fewshot-sep {
+      width: 1px;
+      height: 36px;
+      background: var(--border);
+      flex-shrink: 0;
+      margin: 0 2px;
+    }
+
+    /* IMG token chip */
+    .img-tok {
+      background: rgba(8, 145, 178, 0.1);
+      border: 1px solid rgba(8, 145, 178, 0.28);
+      border-radius: 3px;
+      padding: 0 3px;
+    }
+
+    /* DSL bar */
+    #dsl-bar {
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      border-radius: 14px;
+      margin-bottom: 14px;
+      overflow: hidden;
+    }
+
+    .dsl-title-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 16px;
+      border-bottom: 1px solid var(--border);
+      background: rgba(15, 23, 42, 0.02);
+    }
+
+    .dsl-title-text {
+      font-size: 0.72rem;
+      font-weight: 800;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      background: linear-gradient(90deg, #1d4ed8, #6d28d9, #b45309);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .dsl-title-sub {
+      font-size: 0.6rem;
+      color: var(--muted);
+      font-style: italic;
+    }
+
+    .dsl-cols {
+      display: grid;
+      grid-template-columns: 1fr 1px 1fr 1px 1fr;
+    }
+
+    .dsl-divider {
+      background: var(--border);
+    }
+
+    .dsl-section {
+      padding: 11px 14px;
+    }
+
+    .dsl-section.dsl-v {
+      background: rgba(8, 145, 178, 0.07);
+    }
+
+    .dsl-section.dsl-f {
+      background: rgba(180, 83, 9, 0.07);
+    }
+
+    .dsl-section.dsl-o {
+      background: rgba(100, 116, 139, 0.07);
+    }
+
+    .dsl-sec-head {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 8px;
+    }
+
+    .dsl-sec-icon {
+      width: 22px;
+      height: 22px;
+      border-radius: 6px;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.75rem;
+    }
+
+    .dsl-sec-title {
+      font-size: 0.68rem;
+      font-weight: 700;
+    }
+
+    .dsl-sec-sub {
+      font-size: 0.57rem;
+      color: var(--muted);
+    }
+
+    .dsl-fns {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .dsl-fn {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.58rem;
+      color: #475569;
+      padding: 2px 0;
+      white-space: nowrap;
+    }
+
+    .dsl-fn .fn {
+      color: #92400e;
+    }
+
+    /* yellow — symbolic functions */
+    .dsl-fn .vf {
+      color: #0e7490;
+    }
+
+    /* turquoise — VLM functions */
+    .dsl-fn .sym {
+      color: #1d4ed8;
+    }
+
+    /* blue — symbols / args */
+    .dsl-fn .ret {
+      color: #94a3b8;
+      font-size: 0.53rem;
+    }
+
+    .dsl-ops {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      margin-top: 2px;
+    }
+
+    .dsl-op {
+      padding: 2px 8px;
+      border-radius: 5px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.6rem;
+      font-weight: 600;
+      background: rgba(100, 116, 139, 0.08);
+      border: 1px solid rgba(100, 116, 139, 0.2);
+      color: #475569;
+    }
+
+    /* Symbols strip at the bottom of DSL bar */
+    .dsl-sym-strip {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+      padding: 8px 14px;
+      border-top: 1px solid var(--border);
+      background: rgba(15, 23, 42, 0.015);
+    }
+
+    .dsl-sym-lbl {
+      font-size: 0.57rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+      margin-right: 2px;
+      white-space: nowrap;
+    }
+
+    /* DSL bar reveal animation */
+    @keyframes dslReveal {
+      0% {
+        opacity: 0;
+        transform: translateY(-8px);
+        filter: brightness(1.04);
+      }
+
+      60% {
+        filter: brightness(1.01);
+      }
+
+      100% {
+        opacity: 1;
+        transform: none;
+        filter: brightness(1);
+      }
+    }
+
+    #dsl-bar.revealed {
+      animation: dslReveal 0.7s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    }
+
+    /* Search layout */
+    .s3-layout {
+      display: grid;
+      grid-template-columns: 316px 1fr;
+      gap: 14px;
+      align-items: start;
+    }
+
+    .panel {
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      border-radius: 14px;
+      padding: 13px 13px;
+      overflow: hidden;
+      min-width: 0;
+    }
+
+    .panel-title {
+      font-size: 0.57rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--muted);
+      margin-bottom: 10px;
+    }
+
+    /* Tree */
+    .tree-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 4px;
+      margin-bottom: 4px;
+      min-width: 0;
+      opacity: 0;
+      transform: translateX(-8px);
+      transition: opacity 0.35s ease, transform 0.35s ease;
+    }
+
+    .tree-row.shown {
+      opacity: 1;
+      transform: none;
+    }
+
+    .t-branch {
+      color: rgba(100, 116, 139, 0.45);
+      font-size: 0.58rem;
+      flex-shrink: 0;
+      padding-top: 2px;
+    }
+
+    .t-pill {
+      display: inline;
+      min-width: 0;
+      padding: 2px 8px;
+      border-radius: 6px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.57rem;
+      font-weight: 600;
+      word-break: break-word;
+      overflow-wrap: anywhere;
+      line-height: 1.55;
+    }
+
+    .t-pill.root {
+      background: rgba(124, 58, 237, 0.09);
+      border: 1px solid rgba(124, 58, 237, 0.28);
+      color: #5b21b6;
+    }
+
+    .t-pill.fn {
+      background: rgba(180, 83, 9, 0.08);
+      border: 1px solid rgba(180, 83, 9, 0.22);
+      color: #92400e;
+    }
+
+    /* yellow - symbolic functions */
+    .t-pill.vf {
+      background: rgba(8, 145, 178, 0.09);
+      border: 1px solid rgba(8, 145, 178, 0.25);
+      color: #0e7490;
+    }
+
+    /* turquoise - VLM functions */
+    .t-pill.sym {
+      background: rgba(29, 78, 216, 0.09);
+      border: 1px solid rgba(29, 78, 216, 0.2);
+      color: #1d4ed8;
+    }
+
+    /* blue - symbols */
+    .t-pill.op {
+      background: rgba(100, 116, 139, 0.08);
+      border: 1px solid rgba(100, 116, 139, 0.2);
+      color: #475569;
+    }
+
+    /* gray - operators */
+    .t-pill.winner {
+      background: rgba(5, 150, 105, 0.12);
+      border: 1.5px solid #059669;
+      color: #064e3b;
+    }
+
+    .t-prob {
+      font-size: 0.55rem;
+      color: var(--muted);
+      margin-left: 3px;
+    }
+
+    /* Dist */
+    .dist-sep {
+      margin-top: 10px;
+      padding-top: 10px;
+      border-top: 1px solid var(--border);
+    }
+
+    .dist-title {
+      font-size: 0.55rem;
+      font-style: italic;
+      color: var(--muted);
+      margin-bottom: 7px;
+    }
+
+    .dist-row {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      margin-bottom: 5px;
+    }
+
+    .dist-name {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.56rem;
+      color: #64748b;
+      min-width: 86px;
+    }
+
+    .dist-track {
+      flex: 1;
+      height: 5px;
+      background: rgba(15, 23, 42, 0.07);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+
+    .dist-bar {
+      height: 100%;
+      border-radius: 3px;
+      width: 0;
+      transition: width 1.1s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .dist-bar.h {
+      background: var(--blue);
+    }
+
+    .dist-bar.m {
+      background: var(--purple);
+    }
+
+    .dist-bar.l {
+      background: #cbd5e1;
+    }
+
+    .dist-val {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.56rem;
+      color: var(--muted);
+      min-width: 28px;
+    }
+
+    /* Program items */
+    .eval-title {
+      font-size: 0.57rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--muted);
+      margin-bottom: 10px;
+    }
+
+    .prog-item {
+      position: relative;
+      overflow: hidden;
+      background: #fafafa;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 8px 10px;
+      margin-bottom: 6px;
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      opacity: 0;
+      transform: translateX(12px);
+      transition: opacity 0.4s ease, transform 0.4s ease,
+        border-color 0.45s, background 0.45s, box-shadow 0.45s;
+    }
+
+    .prog-item.shown {
+      opacity: 1;
+      transform: none;
+    }
+
+    .prog-item.evaluating {
+      border-color: rgba(37, 99, 235, 0.35);
+      background: rgba(37, 99, 235, 0.03);
+    }
+
+    .prog-item.evaluating::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(90deg, transparent 0%, rgba(37, 99, 235, 0.12) 50%, transparent 100%);
+      background-size: 200% 100%;
+      animation: scanSlide 0.85s ease infinite;
+    }
+
+    @keyframes scanSlide {
+      from {
+        background-position: -100% 0;
+      }
+
+      to {
+        background-position: 200% 0;
+      }
+    }
+
+    .prog-item.best {
+      border-color: var(--green);
+      background: rgba(5, 150, 105, 0.05);
+      animation: bestGlow 2.2s ease infinite;
+    }
+
+    @keyframes bestGlow {
+
+      0%,
+      100% {
+        box-shadow: 0 0 0 2px rgba(5, 150, 105, 0.08);
+      }
+
+      50% {
+        box-shadow: 0 0 0 4px rgba(5, 150, 105, 0.15);
+      }
+    }
+
+    .prog-rank {
+      font-size: 0.62rem;
+      font-weight: 800;
+      color: var(--muted);
+      min-width: 22px;
+      padding-top: 2px;
+      transition: color 0.4s;
+    }
+
+    .prog-item.best .prog-rank {
+      color: var(--green);
+    }
+
+    .prog-code {
+      flex: 1;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.58rem;
+      color: #334155;
+      line-height: 1.55;
+    }
+
+    .prog-code .kw {
+      color: #64748b;
+      font-weight: 600;
+    }
+
+    /* gray — operators */
+    .prog-code .fn {
+      color: #92400e;
+    }
+
+    /* yellow — symbolic functions */
+    .prog-code .vf {
+      color: #0e7490;
+    }
+
+    /* turquoise — VLM functions */
+    .prog-code .sym {
+      color: #1d4ed8;
+    }
+
+    /* blue — symbols */
+    .prog-right {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      gap: 6px;
+      flex-shrink: 0;
+    }
+
+    .prog-score {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.76rem;
+      font-weight: 700;
+      color: var(--muted);
+      transition: color 0.4s;
+      min-width: 38px;
+      text-align: right;
+    }
+
+    .prog-item.best .prog-score {
+      color: var(--green);
+    }
+
+    .eval-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 0 8px 5px 8px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 6px;
+    }
+
+    .eval-header-rank {
+      width: 22px;
+      flex-shrink: 0;
+    }
+
+    .eval-header-prog {
+      flex: 1;
+      font-size: 0.56rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      color: var(--muted);
+    }
+
+    .eval-header-acc {
+      font-size: 0.56rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      color: var(--muted);
+      min-width: 38px;
+      text-align: right;
+      flex-shrink: 0;
+    }
+
+    .prog-star {
+      font-size: 0.68rem;
+      opacity: 0;
+      transition: opacity 0.4s;
+    }
+
+    .prog-item.best .prog-star {
+      opacity: 1;
+    }
+
+    /* Best result */
+    .best-result {
+      margin-top: 8px;
+      padding: 10px 12px;
+      background: linear-gradient(135deg, rgba(5, 150, 105, 0.06), rgba(37, 99, 235, 0.04));
+      border: 1.5px solid rgba(5, 150, 105, 0.3);
+      border-radius: 12px;
+      opacity: 0;
+      transform: translateY(8px);
+      transition: opacity 0.5s ease, transform 0.5s ease;
+    }
+
+    .best-result.shown {
+      opacity: 1;
+      transform: none;
+    }
+
+    .best-result-lbl {
+      font-size: 0.58rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--green);
+      margin-bottom: 5px;
+    }
+
+    .best-result-code {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.65rem;
+      color: #334155;
+      line-height: 1.7;
+    }
+
+    .best-result-code .kw {
+      color: #64748b;
+      font-weight: 600;
+    }
+
+    /* gray — operators */
+    .best-result-code .fn {
+      color: #92400e;
+    }
+
+    /* yellow — symbolic functions */
+    .best-result-code .vf {
+      color: #0e7490;
+    }
+
+    /* turquoise — VLM functions */
+    .best-result-code .sym {
+      color: #1d4ed8;
+    }
+
+    /* blue — symbols */
+    .best-result-acc {
+      margin-top: 6px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.65rem;
+      color: var(--green);
+    }
+
+    /* ── Reveal helper ── */
+    .r {
+      opacity: 0;
+      transform: translateY(9px) scale(0.96);
+      transition: opacity 0.4s ease, transform 0.4s ease;
+    }
+
+    .r.shown {
+      opacity: 1;
+      transform: none;
+    }
+
+    /* ── Controls ── */
+    #controls {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 12px;
+      margin-top: 28px;
+    }
+
+
+    .ctrl-btn {
+      padding: 8px 22px;
+      border-radius: 9px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      border: 1px solid var(--border);
+      background: rgba(15, 23, 42, 0.04);
+      color: var(--text);
+      cursor: pointer;
+      transition: background 0.2s, border-color 0.2s;
+    }
+
+    .ctrl-btn:hover {
+      background: rgba(15, 23, 42, 0.07);
+      border-color: rgba(15, 23, 42, 0.18);
+    }
+
+    .ctrl-btn.primary {
+      background: rgba(37, 99, 235, 0.08);
+      border-color: rgba(37, 99, 235, 0.25);
+      color: #1d4ed8;
+    }
+
+    .ctrl-btn.primary:hover {
+      background: rgba(37, 99, 235, 0.14);
+    }
+  </style>
+</head>
+
+<body>
+  <div id="app">
+
+    <!-- Title -->
+    <div id="title-wrap">
+      <h1 id="main-title">Vision-Language Programs</h1>
+      <!-- <p id="main-sub">Symbol grounding with a VLM → typed DSL → heap search over programs → best program p*</p> -->
+    </div>
+
+    <!-- Content wrapper -->
+    <div id="content-wrapper">
+
+      <!-- ════ GROUNDING ════ -->
+      <div id="grounding-section">
+        <div class="s1-flow">
+
+          <!-- Task X -->
+          <div class="task-box r" id="s1-task">
+            <div class="task-title">Task Birthday Cake — few-shot examples</div>
+            <div class="img-col-label pos">＋ Positive</div>
+            <div class="img-grid">
+              <svg viewBox="0 0 60 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect width="60" height="60" fill="#fdf2f8" rx="4" />
+                <ellipse cx="30" cy="52" rx="22" ry="4" fill="#e5e7eb" />
+                <rect x="10" y="34" width="40" height="18" rx="2" fill="#f472b6" />
+                <path d="M10,34 Q15,29 20,34 Q25,29 30,34 Q35,29 40,34 Q45,29 50,34" fill="#fce7f3" />
+                <rect x="16" y="24" width="28" height="12" rx="2" fill="#f9a8d4" />
+                <rect x="22" y="12" width="4" height="13" rx="1" fill="#fde047" />
+                <rect x="34" y="12" width="4" height="13" rx="1" fill="#a78bfa" />
+                <ellipse cx="24" cy="10" rx="2.5" ry="3.5" fill="#f97316" />
+                <ellipse cx="36" cy="10" rx="2.5" ry="3.5" fill="#f97316" />
+                <ellipse cx="24" cy="9" rx="1.2" ry="2" fill="#fde047" />
+                <ellipse cx="36" cy="9" rx="1.2" ry="2" fill="#fde047" />
+              </svg>
+              <svg viewBox="0 0 60 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect width="60" height="60" fill="#fffbeb" rx="4" />
+                <rect x="2" y="52" width="56" height="6" rx="2" fill="#d97706" />
+                <rect x="26" y="12" width="8" height="40" rx="2" fill="#fff7ed" />
+                <ellipse cx="30" cy="10" rx="3" ry="4" fill="#f97316" />
+                <ellipse cx="30" cy="9" rx="1.5" ry="2.5" fill="#fde047" />
+                <rect x="10" y="20" width="7" height="32" rx="2" fill="#fce7f3" />
+                <ellipse cx="13.5" cy="18" rx="2.5" ry="3.5" fill="#f97316" />
+                <ellipse cx="13.5" cy="17" rx="1.2" ry="2.2" fill="#fde047" />
+                <rect x="43" y="24" width="7" height="28" rx="2" fill="#dbeafe" />
+                <ellipse cx="46.5" cy="22" rx="2.5" ry="3.5" fill="#f97316" />
+                <ellipse cx="46.5" cy="21" rx="1.2" ry="2.2" fill="#fde047" />
+              </svg>
+              <svg viewBox="0 0 60 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect width="60" height="60" fill="#f0fdf4" rx="4" />
+                <ellipse cx="30" cy="54" rx="24" ry="4" fill="#d1d5db" />
+                <rect x="8" y="38" width="44" height="16" rx="3" fill="#4ade80" />
+                <rect x="13" y="27" width="34" height="13" rx="2" fill="#86efac" />
+                <rect x="19" y="18" width="22" height="10" rx="2" fill="#bbf7d0" />
+                <rect x="23" y="7" width="3" height="11" rx="1" fill="#fde047" />
+                <rect x="30" y="7" width="3" height="11" rx="1" fill="#f9a8d4" />
+                <rect x="37" y="7" width="3" height="11" rx="1" fill="#a78bfa" />
+                <ellipse cx="24.5" cy="5.5" rx="2" ry="3" fill="#f97316" />
+                <ellipse cx="31.5" cy="5.5" rx="2" ry="3" fill="#f97316" />
+                <ellipse cx="38.5" cy="5.5" rx="2" ry="3" fill="#f97316" />
+              </svg>
+            </div>
+            <div class="img-col-label neg">－ Negative</div>
+            <div class="img-grid">
+              <svg viewBox="0 0 60 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect width="60" height="60" fill="#0f172a" rx="4" />
+                <line x1="20" y1="18" x2="20" y2="8" stroke="#fbbf24" stroke-width="1.5" />
+                <line x1="20" y1="18" x2="28" y2="12" stroke="#fbbf24" stroke-width="1.5" />
+                <line x1="20" y1="18" x2="30" y2="20" stroke="#fbbf24" stroke-width="1.5" />
+                <line x1="20" y1="18" x2="26" y2="28" stroke="#fbbf24" stroke-width="1.5" />
+                <line x1="20" y1="18" x2="14" y2="28" stroke="#fbbf24" stroke-width="1.5" />
+                <line x1="20" y1="18" x2="10" y2="20" stroke="#fbbf24" stroke-width="1.5" />
+                <circle cx="20" cy="18" r="2.5" fill="#fef3c7" />
+                <line x1="42" y1="38" x2="42" y2="28" stroke="#f87171" stroke-width="1.5" />
+                <line x1="42" y1="38" x2="50" y2="32" stroke="#60a5fa" stroke-width="1.5" />
+                <line x1="42" y1="38" x2="52" y2="40" stroke="#a78bfa" stroke-width="1.5" />
+                <line x1="42" y1="38" x2="48" y2="48" stroke="#4ade80" stroke-width="1.5" />
+                <line x1="42" y1="38" x2="34" y2="48" stroke="#f87171" stroke-width="1.5" />
+                <circle cx="42" cy="38" r="2.5" fill="#fef2f2" />
+              </svg>
+              <svg viewBox="0 0 60 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect width="60" height="60" fill="#f8fafc" rx="4" />
+                <rect x="14" y="28" width="32" height="12" rx="6" fill="#fef3c7" />
+                <rect x="16" y="22" width="28" height="10" rx="5" fill="#fde68a" />
+                <rect x="18" y="16" width="24" height="9" rx="4" fill="#fef3c7" />
+                <ellipse cx="24" cy="18" rx="1.5" ry="1" fill="#d97706" transform="rotate(-20 24 18)" />
+                <ellipse cx="30" cy="17" rx="1.5" ry="1" fill="#d97706" />
+                <ellipse cx="36" cy="18" rx="1.5" ry="1" fill="#d97706" transform="rotate(20 36 18)" />
+              </svg>
+              <svg viewBox="0 0 60 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect width="60" height="60" fill="#f8fafc" rx="4" />
+                <rect x="22" y="50" width="16" height="5" rx="2" fill="#9ca3af" />
+                <ellipse cx="30" cy="50" rx="8" ry="3" fill="#d1d5db" />
+                <rect x="24" y="12" width="12" height="38" rx="3" fill="#fffbeb" />
+                <line x1="24" y1="22" x2="36" y2="22" stroke="#fef3c7" stroke-width="0.8" />
+                <line x1="24" y1="30" x2="36" y2="30" stroke="#fef3c7" stroke-width="0.8" />
+                <line x1="30" y1="12" x2="30" y2="7" stroke="#374151" stroke-width="1.5" stroke-linecap="round" />
+              </svg>
+            </div>
+          </div>
+
+          <!-- Connector 1 -->
+          <div class="conn r" id="s1-c1">
+            <div class="conn-lbl" style="color:#f59e0b">Type G<br>+ imgs</div>
+            <div class="conn-line" id="cl1" style="margin-top:5px"></div>
+          </div>
+
+          <!-- VLM -->
+          <div class="vlm-box r" id="s1-vlm">
+            <div class="vlm-badge">⚡ VLM Query</div>
+            <div class="vlm-name">VLM</div>
+            <div class="vlm-tags">
+              <span class="vlm-tag">📷 imgs</span>
+              <span class="vlm-tag">Type G</span>
+            </div>
+          </div>
+
+          <!-- Connector 2 -->
+          <div class="conn r" id="s1-c2">
+            <div class="conn-lbl">symbols</div>
+            <div class="conn-line" id="cl2" style="margin-top:5px"></div>
+          </div>
+
+          <!-- Symbols -->
+          <div class="sym-panel r" id="s1-syms">
+            <div class="sym-grp">
+              <div class="sym-lbl">Objects</div>
+              <div class="chips">
+                <span class="chip obj r" id="o1">cake</span>
+                <span class="chip obj r" id="o2">candles</span>
+                <span class="chip obj r" id="o3">fire</span>
+                <span class="chip obj r" id="o4">person</span>
+              </div>
+            </div>
+            <div class="sym-grp">
+              <div class="sym-lbl">Properties</div>
+              <div class="chips">
+                <span class="chip prop r" id="p1">colorful</span>
+                <span class="chip prop r" id="p2">lit</span>
+                <span class="chip prop r" id="p3">decorated</span>
+              </div>
+            </div>
+            <div class="sym-grp">
+              <div class="sym-lbl">Actions</div>
+              <div class="chips">
+                <span class="chip act r" id="a1">blow</span>
+                <span class="chip act r" id="a2">burn</span>
+              </div>
+            </div>
+          </div>
+
+        </div><!-- /s1-flow -->
+      </div><!-- /grounding-section -->
+
+      <!-- ════ SEARCH SECTION ════ -->
+      <div id="search-section">
+
+        <!-- Few-shot strip -->
+        <div id="fewshot-strip">
+          <span class="fewshot-lbl">Task Birthday Cake — few-shot examples</span>
+          <div class="fewshot-group">
+            <span class="fewshot-sign pos">＋</span>
+            <div class="fewshot-img"><svg viewBox="0 0 60 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect width="60" height="60" fill="#fdf2f8" rx="4" />
+                <ellipse cx="30" cy="52" rx="22" ry="4" fill="#e5e7eb" />
+                <rect x="10" y="34" width="40" height="18" rx="2" fill="#f472b6" />
+                <path d="M10,34 Q15,29 20,34 Q25,29 30,34 Q35,29 40,34 Q45,29 50,34" fill="#fce7f3" />
+                <rect x="16" y="24" width="28" height="12" rx="2" fill="#f9a8d4" />
+                <rect x="22" y="12" width="4" height="13" rx="1" fill="#fde047" />
+                <rect x="34" y="12" width="4" height="13" rx="1" fill="#a78bfa" />
+                <ellipse cx="24" cy="10" rx="2.5" ry="3.5" fill="#f97316" />
+                <ellipse cx="36" cy="10" rx="2.5" ry="3.5" fill="#f97316" />
+                <ellipse cx="24" cy="9" rx="1.2" ry="2" fill="#fde047" />
+                <ellipse cx="36" cy="9" rx="1.2" ry="2" fill="#fde047" />
+              </svg></div>
+            <div class="fewshot-img"><svg viewBox="0 0 60 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect width="60" height="60" fill="#fffbeb" rx="4" />
+                <rect x="2" y="52" width="56" height="6" rx="2" fill="#d97706" />
+                <rect x="26" y="12" width="8" height="40" rx="2" fill="#fff7ed" />
+                <ellipse cx="30" cy="10" rx="3" ry="4" fill="#f97316" />
+                <ellipse cx="30" cy="9" rx="1.5" ry="2.5" fill="#fde047" />
+                <rect x="10" y="20" width="7" height="32" rx="2" fill="#fce7f3" />
+                <ellipse cx="13.5" cy="18" rx="2.5" ry="3.5" fill="#f97316" />
+                <ellipse cx="13.5" cy="17" rx="1.2" ry="2.2" fill="#fde047" />
+                <rect x="43" y="24" width="7" height="28" rx="2" fill="#dbeafe" />
+                <ellipse cx="46.5" cy="22" rx="2.5" ry="3.5" fill="#f97316" />
+                <ellipse cx="46.5" cy="21" rx="1.2" ry="2.2" fill="#fde047" />
+              </svg></div>
+            <div class="fewshot-img"><svg viewBox="0 0 60 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect width="60" height="60" fill="#f0fdf4" rx="4" />
+                <ellipse cx="30" cy="54" rx="24" ry="4" fill="#d1d5db" />
+                <rect x="8" y="38" width="44" height="16" rx="3" fill="#4ade80" />
+                <rect x="13" y="27" width="34" height="13" rx="2" fill="#86efac" />
+                <rect x="19" y="18" width="22" height="10" rx="2" fill="#bbf7d0" />
+                <rect x="23" y="7" width="3" height="11" rx="1" fill="#fde047" />
+                <rect x="30" y="7" width="3" height="11" rx="1" fill="#f9a8d4" />
+                <rect x="37" y="7" width="3" height="11" rx="1" fill="#a78bfa" />
+                <ellipse cx="24.5" cy="5.5" rx="2" ry="3" fill="#f97316" />
+                <ellipse cx="31.5" cy="5.5" rx="2" ry="3" fill="#f97316" />
+                <ellipse cx="38.5" cy="5.5" rx="2" ry="3" fill="#f97316" />
+              </svg></div>
+          </div>
+          <div class="fewshot-sep"></div>
+          <div class="fewshot-group">
+            <span class="fewshot-sign neg">－</span>
+            <div class="fewshot-img"><svg viewBox="0 0 60 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect width="60" height="60" fill="#0f172a" rx="4" />
+                <line x1="20" y1="18" x2="20" y2="8" stroke="#fbbf24" stroke-width="1.5" />
+                <line x1="20" y1="18" x2="28" y2="12" stroke="#fbbf24" stroke-width="1.5" />
+                <line x1="20" y1="18" x2="30" y2="20" stroke="#fbbf24" stroke-width="1.5" />
+                <line x1="20" y1="18" x2="26" y2="28" stroke="#fbbf24" stroke-width="1.5" />
+                <line x1="20" y1="18" x2="14" y2="28" stroke="#fbbf24" stroke-width="1.5" />
+                <line x1="20" y1="18" x2="10" y2="20" stroke="#fbbf24" stroke-width="1.5" />
+                <circle cx="20" cy="18" r="2.5" fill="#fef3c7" />
+                <line x1="42" y1="38" x2="42" y2="28" stroke="#f87171" stroke-width="1.5" />
+                <line x1="42" y1="38" x2="50" y2="32" stroke="#60a5fa" stroke-width="1.5" />
+                <line x1="42" y1="38" x2="52" y2="40" stroke="#a78bfa" stroke-width="1.5" />
+                <line x1="42" y1="38" x2="48" y2="48" stroke="#4ade80" stroke-width="1.5" />
+                <line x1="42" y1="38" x2="34" y2="48" stroke="#f87171" stroke-width="1.5" />
+                <circle cx="42" cy="38" r="2.5" fill="#fef2f2" />
+              </svg></div>
+            <div class="fewshot-img"><svg viewBox="0 0 60 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect width="60" height="60" fill="#f8fafc" rx="4" />
+                <rect x="14" y="28" width="32" height="12" rx="6" fill="#fef3c7" />
+                <rect x="16" y="22" width="28" height="10" rx="5" fill="#fde68a" />
+                <rect x="18" y="16" width="24" height="9" rx="4" fill="#fef3c7" />
+                <ellipse cx="24" cy="18" rx="1.5" ry="1" fill="#d97706" transform="rotate(-20 24 18)" />
+                <ellipse cx="30" cy="17" rx="1.5" ry="1" fill="#d97706" />
+                <ellipse cx="36" cy="18" rx="1.5" ry="1" fill="#d97706" transform="rotate(20 36 18)" />
+              </svg></div>
+            <div class="fewshot-img"><svg viewBox="0 0 60 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect width="60" height="60" fill="#f8fafc" rx="4" />
+                <rect x="22" y="50" width="16" height="5" rx="2" fill="#9ca3af" />
+                <ellipse cx="30" cy="50" rx="8" ry="3" fill="#d1d5db" />
+                <rect x="24" y="12" width="12" height="38" rx="3" fill="#fffbeb" />
+                <line x1="24" y1="22" x2="36" y2="22" stroke="#fef3c7" stroke-width="0.8" />
+                <line x1="24" y1="30" x2="36" y2="30" stroke="#fef3c7" stroke-width="0.8" />
+                <line x1="30" y1="12" x2="30" y2="7" stroke="#374151" stroke-width="1.5" stroke-linecap="round" />
+              </svg></div>
+          </div>
+        </div>
+
+        <!-- DSL bar -->
+        <div id="dsl-bar">
+
+          <!-- Title row -->
+          <div class="dsl-title-row">
+            <span class="dsl-title-text">Domain-Specific Language</span>
+            <span class="dsl-title-sub">V ∪ F ∪ O &nbsp;·&nbsp; typed PCFG &nbsp;·&nbsp; search</span>
+          </div>
+
+          <!-- Three-column function sections -->
+          <div class="dsl-cols">
+            <div class="dsl-section dsl-v">
+              <div class="dsl-sec-head">
+                <div class="dsl-sec-icon" style="background:rgba(8,145,178,0.18)">🔭</div>
+                <div>
+                  <div class="dsl-sec-title">VLM Functions <em>V</em></div>
+                  <div class="dsl-sec-sub">perception interface</div>
+                </div>
+              </div>
+              <div class="dsl-fns">
+                <div class="dsl-fn"><span class="vf">get_objects</span>(<span class="sym">IMG</span>, <span
+                    class="sym">obj</span>) <span class="ret">→ list[float]</span></div>
+                <div class="dsl-fn"><span class="vf">get_actions</span>(<span class="sym">IMG</span>, <span
+                    class="sym">action</span>) <span class="ret">→ list[float]</span></div>
+              </div>
+            </div>
+
+            <div class="dsl-divider"></div>
+
+            <div class="dsl-section dsl-f">
+              <div class="dsl-sec-head">
+                <div class="dsl-sec-icon" style="background:rgba(180,83,9,0.18)">🧮</div>
+                <div>
+                  <div class="dsl-sec-title">Symbolic Functions <em>F</em></div>
+                  <div class="dsl-sec-sub">reasoning primitives</div>
+                </div>
+              </div>
+              <div class="dsl-fns">
+                <div class="dsl-fn"><span class="fn">exists_object</span>(<span class="sym">s</span>, <span
+                    class="sym">obj</span>) <span class="ret">→ bool</span></div>
+                <div class="dsl-fn"><span class="fn">count_object</span>(<span class="sym">s</span>, <span
+                    class="sym">obj</span>) <span class="ret">→ int</span></div>
+                <div class="dsl-fn"><span class="fn">exists_obj_with_property</span>(<span class="sym">s</span>,<span
+                    class="sym">o</span>,<span class="sym">p</span>) <span class="ret">→ bool</span></div>
+              </div>
+            </div>
+
+            <div class="dsl-divider"></div>
+
+            <div class="dsl-section dsl-o">
+              <div class="dsl-sec-head">
+                <div class="dsl-sec-icon" style="background:rgba(100,116,139,0.18)">⚙️</div>
+                <div>
+                  <div class="dsl-sec-title">Operators <em>O</em></div>
+                  <div class="dsl-sec-sub">logical composition</div>
+                </div>
+              </div>
+              <div class="dsl-ops">
+                <span class="dsl-op">and</span>
+                <span class="dsl-op">or</span>
+                <span class="dsl-op">xor</span>
+                <span class="dsl-op">not</span>
+                <span class="dsl-op">eq?</span>
+                <span class="dsl-op">gt?</span>
+              </div>
+            </div>
+          </div><!-- /dsl-cols -->
+
+          <!-- Grounded symbols strip -->
+          <div class="dsl-sym-strip">
+            <span class="dsl-sym-lbl">Grounded Symbols →</span>
+            <span class="chip obj">cake</span>
+            <span class="chip obj">candles</span>
+            <span class="chip obj">fire</span>
+            <span class="chip obj">person</span>
+            <span class="chip prop">colorful</span>
+            <span class="chip prop">lit</span>
+            <span class="chip prop">decorated</span>
+            <span class="chip act">blow</span>
+            <span class="chip act">burn</span>
+          </div>
+
+        </div><!-- /dsl-bar -->
+
+        <!-- Search layout -->
+        <div class="s3-layout">
+
+          <!-- Left: tree + dist -->
+          <div style="display:flex;flex-direction:column;gap:12px">
+
+            <div class="panel">
+              <div class="panel-title">Search Tree (PCFG)</div>
+              <div class="tree-row" id="tr-root"><span class="t-pill root">bool</span></div>
+              <div class="tree-row" id="tr-1" style="padding-left:12px"><span class="t-branch">└─</span><span
+                  class="t-pill fn">exists_object(s, ·)</span></div>
+              <div class="tree-row" id="tr-2" style="padding-left:22px"><span class="t-branch">└─</span><span
+                  class="t-pill vf">get_objects(IMG)</span></div>
+              <div class="tree-row" id="tr-3" style="padding-left:32px"><span class="t-branch">├─</span><span
+                  class="t-pill sym">cake</span><span class="t-prob">0.86</span></div>
+              <div class="tree-row" id="tr-4" style="padding-left:32px"><span class="t-branch">├─</span><span
+                  class="t-pill sym">candles</span><span class="t-prob">0.67</span></div>
+              <div class="tree-row" id="tr-5" style="padding-left:32px"><span class="t-branch">└─</span><span
+                  class="t-pill sym" style="opacity:0.45">person</span><span class="t-prob"
+                  style="opacity:0.45">0.08</span></div>
+              <div class="tree-row" id="tr-6" style="padding-left:12px"><span class="t-branch">├─</span><span
+                  class="t-pill op">or(·, ·)</span></div>
+              <div class="tree-row" id="tr-7" style="padding-left:22px"><span class="t-branch">├─</span><span
+                  class="t-pill fn">exists_object(s,&nbsp;<span style="color:#1d4ed8">cake</span>)</span></div>
+              <div class="tree-row" id="tr-7b" style="padding-left:22px"><span class="t-branch">└─</span><span
+                  class="t-pill fn">exists_object(s,&nbsp;<span style="color:#1d4ed8">candles</span>)</span></div>
+              <div class="tree-row" id="tr-8" style="padding-left:12px"><span class="t-branch">└─</span><span
+                  class="t-pill op">and(·, ·)</span></div>
+              <div class="tree-row" id="tr-9" style="padding-left:22px"><span class="t-branch">├─</span><span
+                  class="t-pill fn">exists_object(s,&nbsp;<span style="color:#1d4ed8">cake</span>)</span></div>
+              <div class="tree-row" id="tr-10" style="padding-left:32px"><span class="t-branch">└─</span><span
+                  class="t-pill fn">exists_object(s,&nbsp;<span style="color:#1d4ed8">candles</span>)</span></div>
+              <div class="tree-row" id="tr-11" style="padding-left:22px"><span class="t-branch">└─</span><span
+                  class="t-pill fn">exists_object(s,&nbsp;<span style="color:#1d4ed8">cake</span>)</span></div>
+              <div class="tree-row" id="tr-12" style="padding-left:32px"><span class="t-branch">└─</span><span
+                  class="t-pill winner">exists_obj_with_property(s,&nbsp;<span
+                    style="color:#1d4ed8">candles</span>,&nbsp;<span style="color:#1d4ed8">lit</span>)</span><span
+                  style="margin-left:4px;font-size:0.68rem">⭐</span></div>
+            </div>
+
+            <div class="panel">
+              <div class="panel-title">Occurrence-based Prior</div>
+              <div class="dist-sep" style="margin-top:0;padding-top:0;border-top:none">
+                <div class="dist-title">P(symbol | positives)</div>
+                <div class="dist-row r" id="di1"><span class="dist-name">cake</span>
+                  <div class="dist-track">
+                    <div class="dist-bar h" id="db1"></div>
+                  </div><span class="dist-val">0.86</span>
+                </div>
+                <div class="dist-row r" id="di2"><span class="dist-name">candles</span>
+                  <div class="dist-track">
+                    <div class="dist-bar m" id="db2"></div>
+                  </div><span class="dist-val">0.67</span>
+                </div>
+                <div class="dist-row r" id="di3"><span class="dist-name">person</span>
+                  <div class="dist-track">
+                    <div class="dist-bar l" id="db3"></div>
+                  </div><span class="dist-val">0.08</span>
+                </div>
+              </div>
+            </div>
+
+          </div><!-- /left col -->
+
+          <!-- Right: eval -->
+          <div>
+            <div class="panel">
+              <div class="eval-title">Program Evaluation — Search</div>
+
+              <div class="eval-header">
+                <span class="eval-header-rank"></span>
+                <span class="eval-header-prog">Program</span>
+                <span class="eval-header-acc">Accuracy</span>
+              </div>
+
+              <div class="prog-item" id="pi1">
+                <span class="prog-rank" id="pr1">#–</span>
+                <div class="prog-code"><span class="fn">exists_object</span>(<span class="vf">get_objects</span>(<span
+                    class="vf img-tok">IMG</span>), <span class="sym">cake</span>)</div>
+                <div class="prog-right"><span class="prog-score" id="ps1">—</span><span class="prog-star">⭐</span></div>
+              </div>
+
+              <div class="prog-item" id="pi2">
+                <span class="prog-rank" id="pr2">#–</span>
+                <div class="prog-code"><span class="fn">exists_object</span>(<span class="vf">get_objects</span>(<span
+                    class="vf img-tok">IMG</span>), <span class="sym">candles</span>)</div>
+                <div class="prog-right"><span class="prog-score" id="ps2">—</span><span class="prog-star">⭐</span></div>
+              </div>
+
+              <div class="prog-item" id="pi3">
+                <span class="prog-rank" id="pr3">#–</span>
+                <div class="prog-code"><span class="fn">exists_object</span>(<span class="vf">get_objects</span>(<span
+                    class="vf img-tok">IMG</span>), <span class="sym">person</span>)</div>
+                <div class="prog-right"><span class="prog-score" id="ps3">—</span><span class="prog-star">⭐</span></div>
+              </div>
+
+              <div class="prog-item" id="pi4">
+                <span class="prog-rank" id="pr4">#–</span>
+                <div class="prog-code">
+                  <span class="kw">or</span>(<br>
+                  &nbsp;<span class="fn">exists_object</span>(<span class="vf">get_objects</span>(<span
+                    class="vf img-tok">IMG</span>), <span class="sym">cake</span>),<br>
+                  &nbsp;<span class="fn">exists_object</span>(<span class="vf">get_objects</span>(<span
+                    class="vf img-tok">IMG</span>), <span class="sym">candles</span>))
+                </div>
+                <div class="prog-right"><span class="prog-score" id="ps4">—</span><span class="prog-star">⭐</span></div>
+              </div>
+
+              <div class="prog-item" id="pi5">
+                <span class="prog-rank" id="pr5">#–</span>
+                <div class="prog-code">
+                  <span class="kw">and</span>(<br>
+                  &nbsp;<span class="fn">exists_object</span>(<span class="vf">get_objects</span>(<span
+                    class="vf img-tok">IMG</span>), <span class="sym">cake</span>),<br>
+                  &nbsp;<span class="fn">exists_object</span>(<span class="vf">get_objects</span>(<span
+                    class="vf img-tok">IMG</span>), <span class="sym">candles</span>))
+                </div>
+                <div class="prog-right"><span class="prog-score" id="ps5">—</span><span class="prog-star">⭐</span></div>
+              </div>
+
+              <div class="prog-item" id="pi6">
+                <span class="prog-rank" id="pr6">#–</span>
+                <div class="prog-code">
+                  <span class="kw">and</span>(<span class="fn">exists_object</span>(<span class="sym">...</span>, <span
+                    class="sym">cake</span>),<br>
+                  &nbsp;&nbsp;&nbsp;&nbsp;<span class="fn">exists_obj_with_property</span>(<br>
+                  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="vf">get_objects</span>(<span
+                    class="vf img-tok">IMG</span>), <span class="sym">candles</span>, <span class="sym">lit</span>))
+                </div>
+                <div class="prog-right"><span class="prog-score" id="ps6">—</span><span class="prog-star">⭐</span></div>
+              </div>
+
+            </div>
+
+            <div class="best-result" id="best-result">
+              <div class="best-result-lbl">✓ Best Program — p*</div>
+              <div class="best-result-code">
+                <span class="kw">p*</span> = (<span class="kw">and</span><br>
+                &nbsp;(<span class="fn">exists_object</span> (<span class="vf">get_objects</span> <span
+                  class="vf img-tok">IMG</span>) <span class="sym">cake</span>)<br>
+                &nbsp;(<span class="fn">exists_obj_with_property</span> (<span class="vf">get_objects</span> <span
+                  class="vf img-tok">IMG</span>) <span class="sym">candles</span> <span class="sym">lit</span>))
+              </div>
+              <div class="best-result-acc">Balanced accuracy: <strong>100%</strong> on 6-shot task</div>
+            </div>
+          </div><!-- /right col -->
+
+        </div><!-- /s3-layout -->
+      </div><!-- /search-section -->
+
+    </div><!-- /content-wrapper -->
+
+    <!-- Controls -->
+    <div id="controls">
+      <button class="ctrl-btn" id="btn-stop">⏸ Stop</button>
+      <button class="ctrl-btn" id="btn-replay">↺ Replay</button>
+    </div>
+
+  </div><!-- /app -->
+
+  <script>
+    // Hide title when running inside an iframe (paper website embed)
+    const isEmbedded = window.self !== window.top;
+    if (isEmbedded) document.body.classList.add('in-iframe');
+
+    // Report content size to parent — called once when search phase settles
+    function reportSize() {
+      if (!isEmbedded) return;
+      const app = document.getElementById('app');
+      window.parent.postMessage({
+        type: 'vlp-resize',
+        height: app.offsetHeight,
+        width:  app.scrollWidth
+      }, '*');
+    }
+
+    // ── Utils ────────────────────────────────────────────────────────
+    const g = id => document.getElementById(id);
+
+    // Pause/resume tracking
+    const timers = [];           // active setTimeout IDs
+    const schedule = [];          // {fn, absMs} — absMs relative to animStartTime
+    let animStartTime = 0;       // wall-clock ms when animation (or resumed) started
+    let pauseWallTime = 0;       // wall-clock ms when Stop was pressed
+
+    // Register a callback: ms is relative to *now* (as usual for setTimeout),
+    // but we also record the absolute animation-time so we can resume later.
+    function t(fn, ms) {
+      const absMs = (Date.now() - animStartTime) + ms;
+      schedule.push({ fn, absMs });
+      const id = setTimeout(fn, ms);
+      timers.push(id);
+      return id;
+    }
+
+    // Cancel pending timers but keep schedule intact (needed for resume).
+    function cancelAll() { timers.forEach(clearTimeout); timers.length = 0; }
+
+    function show(id, delay) { t(() => { const e = g(id); if (e) e.classList.add('shown'); }, delay); }
+
+    // ── Main animation ───────────────────────────────────────────────
+    function runAnimation() {
+      cancelAll();
+      schedule.length = 0;
+      animStartTime = Date.now();
+      stopped = false;
+
+      // ── Reset all state ──────────────────────────────────────────
+      const groundEl = g('grounding-section');
+      const searchEl = g('search-section');
+
+      groundEl.classList.remove('out');
+      groundEl.style.display = '';
+      searchEl.classList.remove('shown');
+      g('dsl-bar').classList.remove('revealed');
+
+      ['s1-task', 's1-c1', 's1-vlm', 's1-c2', 's1-syms',
+        'o1', 'o2', 'o3', 'o4', 'p1', 'p2', 'p3', 'a1', 'a2'].forEach(id => {
+          const e = g(id); if (e) e.classList.remove('shown');
+        });
+      g('s1-vlm').classList.remove('live');
+      g('cl1').classList.remove('lit');
+      g('cl2').classList.remove('lit');
+
+      ['tr-root', 'tr-1', 'tr-2', 'tr-3', 'tr-4', 'tr-5', 'tr-6', 'tr-7', 'tr-7b', 'tr-8', 'tr-9', 'tr-10', 'tr-11', 'tr-12'].forEach(id => {
+        const e = g(id); if (e) e.classList.remove('shown');
+      });
+      ['di1', 'di2', 'di3'].forEach(id => {
+        const e = g(id); if (e) e.classList.remove('shown');
+        const b = g('db' + id.replace('di', '')); if (b) b.style.width = '0';
+      });
+      for (let i = 1; i <= 6; i++) {
+        const pi = g(`pi${i}`); if (pi) pi.classList.remove('shown', 'evaluating', 'best');
+        const ps = g(`ps${i}`); if (ps) ps.textContent = '—';
+        const pb = g(`pb${i}`); if (pb) pb.style.width = '0';
+        const pr = g(`pr${i}`); if (pr) pr.textContent = '#–';
+      }
+      const br = g('best-result'); if (br) br.classList.remove('shown');
+
+      const wrapper = g('content-wrapper'); // kept for reference
+
+      // ── Phase 1: Grounding ───────────────────────────────────────
+      show('s1-task', 200);
+      show('s1-c1', 850);
+      t(() => g('cl1').classList.add('lit'), 1000);
+      show('s1-vlm', 1300);
+      t(() => g('s1-vlm').classList.add('live'), 1700);
+      show('s1-c2', 2200);
+      t(() => g('cl2').classList.add('lit'), 2400);
+      show('s1-syms', 2750);
+      // Objects
+      show('o1', 3050); show('o2', 3280); show('o3', 3510); show('o4', 3740);
+      // Properties
+      show('p1', 4120); show('p2', 4340); show('p3', 4560);
+      // Actions
+      show('a1', 4950); show('a2', 5170);
+
+      // ── Transition ───────────────────────────────────────────────
+      const TRANS = 5900;
+      t(() => {
+        // Fade out grounding (becomes position:absolute, leaves flow)
+        groundEl.classList.add('out');
+        // After fade completes, fully remove from layout so it doesn't inflate scrollHeight
+        t(() => { groundEl.style.display = 'none'; }, 650);
+
+        // After grounding fades, show search section
+        t(() => {
+          // Show search section
+          searchEl.classList.add('shown');
+
+          // Animate DSL bar in with shimmer
+          g('dsl-bar').classList.add('revealed');
+
+          // Lock iframe to search-phase height (measured after layout settles)
+          setTimeout(reportSize, 150);
+
+          // ── Phase 3: Search animation ─────────────────────────────
+          // All t() delays are relative to THIS moment (inside the 550ms callback).
+          // Each program item appears exactly when its leaf node reveals in the tree.
+
+          // Inline eval helper — schedules everything relative to current moment
+          function ep(piId, psId, _pbId, prId, score, _barW, rank, leafMs, afterScore) {
+            t(() => {
+              const pi = g(piId);
+              pi.classList.add('shown');
+              t(() => {
+                pi.classList.add('evaluating');
+                t(() => {
+                  pi.classList.remove('evaluating');
+                  g(psId).textContent = score;
+                  g(prId).textContent = rank;
+                  if (afterScore) t(afterScore, 600);
+                }, 1000);
+              }, 350);
+            }, leafMs);
+          }
+
+          // ── Tree: root + exists_object branch ─────────────
+          t(() => g('tr-root').classList.add('shown'), 600);
+          t(() => g('tr-1').classList.add('shown'), 1050);
+          t(() => g('tr-2').classList.add('shown'), 1500);
+
+          // ── Symbol leaves — programs pop up at the same moment ─
+          t(() => g('tr-3').classList.add('shown'), 1900); // cake leaf
+          t(() => g('tr-4').classList.add('shown'), 2250); // candles leaf
+          t(() => g('tr-5').classList.add('shown'), 2600); // person leaf
+
+          ep('pi1', 'ps1', 'pb1', 'pr1', '67%', '67%', '#1', 1900, () => {
+            g('pi1').classList.add('best');
+          });
+          ep('pi2', 'ps2', 'pb2', 'pr2', '58%', '58%', '#2', 2250);
+          ep('pi3', 'ps3', 'pb3', 'pr3', '33%', '33%', '#3', 2600);
+
+          // ── Distribution bars — appear after symbol leaves ─
+          t(() => { g('di1').classList.add('shown'); t(() => { g('db1').style.width = '86%'; }, 180); }, 3100);
+          t(() => { g('di2').classList.add('shown'); t(() => { g('db2').style.width = '67%'; }, 180); }, 3400);
+          t(() => { g('di3').classList.add('shown'); t(() => { g('db3').style.width = '8%'; }, 180); }, 3700);
+
+          // ── Tree: or(·,·) branch — program 4 pops up with the leaf ──
+          t(() => g('tr-6').classList.add('shown'), 5200);
+          t(() => g('tr-7').classList.add('shown'), 5650); // or child 1
+          t(() => g('tr-7b').classList.add('shown'), 5700); // or child 2 → pi4
+
+          ep('pi4', 'ps4', 'pb4', 'pr4', '75%', '75%', '#1', 5700, () => {
+            g('pi1').classList.remove('best');
+            g('pi4').classList.add('best');
+            g('pr1').textContent = '#2'; g('pr2').textContent = '#3'; g('pr3').textContent = '#4';
+          });
+
+          // ── Tree: and(·,·) — try 1: arg1 (tr-9) then arg2 (tr-10) → pi5
+          //                     try 2: arg1 (tr-11) then arg2/winner (tr-12) → pi6
+          t(() => g('tr-8').classList.add('shown'), 7300);
+          t(() => g('tr-9').classList.add('shown'), 7750);  // try 1, arg 1
+          t(() => g('tr-10').classList.add('shown'), 8200);  // try 1, arg 2 → pi5
+
+          ep('pi5', 'ps5', 'pb5', 'pr5', '92%', '92%', '#1', 8200, () => {
+            g('pi4').classList.remove('best');
+            g('pi5').classList.add('best');
+            g('pr4').textContent = '#2'; g('pr1').textContent = '#3';
+            g('pr2').textContent = '#4'; g('pr3').textContent = '#5';
+          });
+
+          t(() => g('tr-11').classList.add('shown'), 9900);  // try 2, arg 1
+          t(() => g('tr-12').classList.add('shown'), 10350); // try 2, arg 2 (winner) → pi6
+
+          ep('pi6', 'ps6', 'pb6', 'pr6', '100%', '100%', '#1', 10350, () => {
+            g('pi5').classList.remove('best');
+            g('pi6').classList.add('best');
+            g('pr5').textContent = '#2'; g('pr4').textContent = '#3';
+            g('pr1').textContent = '#4'; g('pr2').textContent = '#5'; g('pr3').textContent = '#6';
+          });
+
+          // ── Best result block ──────────────────────────────
+          t(() => {
+            g('best-result').classList.add('shown');
+            // Auto-loop after a pause unless stopped
+            t(() => { if (!stopped) runAnimation(); }, 4000);
+          }, 12500);
+
+        }, 550);
+
+      }, TRANS);
+    }
+
+
+    // ── Controls ─────────────────────────────────────────────────────
+    let stopped = false;
+
+    g('btn-stop').addEventListener('click', () => {
+      stopped = !stopped;
+      if (stopped) {
+        // Pause: cancel pending timers, remember when we stopped
+        cancelAll();
+        pauseWallTime = Date.now();
+        g('btn-stop').textContent = '▶ Play';
+      } else {
+        // Resume: shift animStartTime forward by the pause duration,
+        // then re-schedule only the callbacks that haven't fired yet.
+        g('btn-stop').textContent = '⏸ Stop';
+        const pauseDuration = Date.now() - pauseWallTime;
+        animStartTime += pauseDuration;
+        const now = Date.now();
+        schedule
+          .filter(cb => animStartTime + cb.absMs > now)
+          .forEach(cb => {
+            const delay = (animStartTime + cb.absMs) - now;
+            const id = setTimeout(cb.fn, delay);
+            timers.push(id);
+          });
+      }
+    });
+
+    g('btn-replay').addEventListener('click', () => {
+      g('btn-stop').textContent = '⏸ Stop';
+      runAnimation();
+    });
+
+    // ── Init ─────────────────────────────────────────────────────────
+    runAnimation();
+  </script>
+</body>
+
+</html>
