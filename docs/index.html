@@ -676,6 +676,24 @@
       transition: height 0.35s ease, width 0.35s ease;
     }
 
+    /* ── Execution iframe wrapper ────────────────────────────────── */
+    .vlp-exec-wrap {
+      display: flex;
+      justify-content: center;
+    }
+
+    .vlp-exec-wrap iframe {
+      display: block;
+      width: 100%;
+      max-width: 100%;
+      height: 520px;
+      border: none;
+      border-radius: 16px;
+      box-shadow: 0 4px 24px rgba(15, 23, 42, 0.08), 0 0 0 1px rgba(15, 23, 42, 0.07);
+      background: #f8fafc;
+      transition: height 0.35s ease, width 0.35s ease;
+    }
+
     /* ── Responsive: fall back to plain vertical stack ───────────── */
     @media (max-width: 880px) {
       .vlp-flow {
@@ -877,8 +895,6 @@
               allowtransparency="true"></iframe>
           </div>
 
-
-
         </div>
       </div>
     </div>
@@ -909,6 +925,28 @@
       </div>
     </div>
   </section>
+
+  <section class="section">
+    <div class="container is-max-desktop">
+      <div class="columns is-centered">
+        <div class="column is-full-width">
+          <h2 class="title is-3">Program Execution</h2>
+          <p class="mb-5">
+            Once the program p* is found, it is executed on each query image.
+            The VLM perception function <code>get_objects</code> grounds objects in the image; the symbolic
+            functions <code>exists_object</code> and <code>exists_obj_with_property</code> check for typed
+            symbols; the logical <code>and</code> combines the results into a final label.
+          </p>
+          <div class="vlp-exec-wrap">
+            <iframe src="./execution.html" id="exec-iframe" title="VLP Program Execution" scrolling="no" frameborder="0"
+              allowtransparency="true"></iframe>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+
 
   <!-- <section class="section">
     <div class="container is-max-desktop">
@@ -1138,6 +1176,18 @@
       window.addEventListener('message', function (e) {
         if (e.data && e.data.type === 'vlp-resize') {
           if (e.data.height) iframe.style.height = e.data.height + 'px';
+          if (e.data.width) iframe.style.width = e.data.width + 'px';
+        }
+      });
+    })();
+
+    /* ── Auto-resize the execution iframe ───────────────────────── */
+    (function () {
+      var iframe = document.getElementById('exec-iframe');
+      if (!iframe) return;
+      window.addEventListener('message', function (e) {
+        if (e.data && e.data.type === 'vlp-exec-resize') {
+          if (e.data.height) iframe.style.height = (e.data.height + 4) + 'px';
           if (e.data.width) iframe.style.width = e.data.width + 'px';
         }
       });

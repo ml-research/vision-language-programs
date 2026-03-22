@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>VLP – Program Execution</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --fn:    #b45309;
+    --fn-bg: #fffbeb;
+    --fn-br: #fcd34d;
+    --vf:    #0d9488;
+    --vf-bg: #f0fdfa;
+    --vf-br: #5eead4;
+    --sym:   #1d4ed8;
+    --kw:    #4b5563;
+    --kw-bg: #f9fafb;
+    --kw-br: #d1d5db;
+    --ok:    #15803d;
+    --ok-bg: #dcfce7;
+    --ok-br: #86efac;
+  }
+
+  body {
+    background: #f8fafc;
+    font-family: 'Inter', system-ui, sans-serif;
+    font-size: 13px;
+    color: #1e293b;
+    padding: 24px 28px 20px;
+  }
+
+  body.in-iframe { padding: 16px 24px 16px; }
+  body.in-iframe #exec-header { display: none; }
+
+  #exec-header { margin-bottom: 14px; }
+  #exec-header h2 { font-size: 1.05rem; font-weight: 700; color: #0f172a; margin-bottom: 3px; }
+  #exec-header p  { font-size: 0.8rem; color: #64748b; }
+
+  /* ── Program code block ─────────────────────────── */
+  #prog-block {
+    background: #1e293b;
+    color: #cbd5e1;
+    border-radius: 10px;
+    padding: 10px 16px;
+    font-family: 'Fira Mono', 'Cascadia Code', 'Courier New', monospace;
+    font-size: 11.5px;
+    line-height: 1.85;
+    margin-bottom: 18px;
+    overflow-x: auto;
+  }
+
+  /* ── Graph container ────────────────────────────── */
+  #graph-wrap {
+    position: relative;
+    width: 690px;
+    height: 295px;
+    margin-bottom: 10px;
+  }
+
+  #gsvg {
+    position: absolute;
+    inset: 0;
+    width: 690px;
+    height: 295px;
+    pointer-events: none;
+    overflow: visible;
+  }
+
+  /* SVG connector lines */
+  .gl {
+    stroke: #e2e8f0;
+    stroke-width: 2;
+    fill: none;
+    stroke-linecap: round;
+    opacity: 0.55;
+    transition: stroke 0.5s, stroke-width 0.5s, opacity 0.5s;
+  }
+  .gl.lit  { stroke: #7dd3fc; stroke-width: 2.5; opacity: 1; }
+  .gl.done { stroke: #86efac; stroke-width: 2.5; opacity: 1; }
+
+  /* ── Graph nodes ────────────────────────────────── */
+  .nd {
+    position: absolute;
+    border-radius: 8px;
+    border: 2px solid transparent;
+    padding: 7px 12px;
+    font-family: 'Fira Mono', 'Cascadia Code', monospace;
+    font-size: 11.5px;
+    font-weight: 500;
+    text-align: left;
+    white-space: nowrap;
+    line-height: 1.5;
+    transition: opacity 0.4s, box-shadow 0.4s, border-color 0.3s, transform 0.3s, background 0.3s, color 0.3s;
+    opacity: 0.22;
+  }
+  .nd.vis  { opacity: 1; }
+  .nd.act  { opacity: 1; transform: scale(1.05); animation: ndPop 0.55s ease; }
+  .nd.done { opacity: 1; transform: scale(1); }
+
+  @keyframes ndPop {
+    0%   { transform: scale(1); }
+    50%  { transform: scale(1.07); }
+    100% { transform: scale(1.05); }
+  }
+
+  .nd.kw  { background: var(--kw-bg); border-color: var(--kw-br); color: var(--kw); }
+  .nd.kw.act  { border-color: #9ca3af; box-shadow: 0 0 0 4px rgba(107,114,128,.1), 0 4px 14px rgba(0,0,0,.08); }
+  .nd.kw.done { background: var(--ok-bg); border-color: var(--ok-br); color: var(--ok); font-weight: 700; }
+
+  .nd.fn  { background: var(--fn-bg); border-color: var(--fn-br); color: var(--fn); }
+  .nd.fn.act  { border-color: #f59e0b; box-shadow: 0 0 0 4px rgba(245,158,11,.12), 0 4px 14px rgba(0,0,0,.08); }
+  .nd.fn.done { background: var(--ok-bg); border-color: var(--ok-br); color: var(--ok); font-weight: 700; }
+
+  .nd.vf  { background: var(--vf-bg); border-color: var(--vf-br); color: var(--vf); }
+  .nd.vf.act  { border-color: #0d9488; box-shadow: 0 0 0 4px rgba(13,148,136,.12), 0 4px 14px rgba(0,0,0,.08); }
+  .nd.vf.done { background: var(--ok-bg); border-color: var(--ok-br); color: var(--ok); font-weight: 700; }
+
+  .nd.img-nd {
+    background: white;
+    border-color: #e2e8f0;
+    padding: 4px;
+    border-radius: 10px;
+    text-align: center;
+    white-space: normal;
+  }
+  .nd.img-nd svg   { display: block; border-radius: 6px; }
+  .nd.img-nd .lbl  { font-size: 10px; font-weight: 600; color: #94a3b8; margin-top: 3px; font-family: 'Fira Mono', monospace; }
+  .nd.img-nd.act   { border-color: #0d9488; box-shadow: 0 0 0 4px rgba(13,148,136,.15); }
+  .nd.img-nd.done  { border-color: var(--ok-br); }
+
+  /* ── Output badges ──────────────────────────────── */
+  .ob {
+    position: absolute;
+    opacity: 0;
+    transform: translateY(4px);
+    transition: opacity 0.4s, transform 0.4s;
+    pointer-events: none;
+  }
+  .ob.show { opacity: 1; transform: translateY(0); }
+
+  .ob-chips { display: flex; flex-wrap: wrap; gap: 3px; max-width: 200px; }
+
+  .oc {
+    font-family: 'Fira Mono', monospace;
+    font-size: 10px;
+    font-weight: 600;
+    padding: 2px 7px;
+    border-radius: 999px;
+    background: #dbeafe;
+    color: var(--sym);
+    border: 1.5px solid #93c5fd;
+    white-space: nowrap;
+    transition: background 0.35s, color 0.35s, border-color 0.35s;
+  }
+  .oc.match { background: var(--ok-bg); color: var(--ok); border-color: var(--ok-br); }
+  /* property sub-tag inside a chip, e.g. "candles · lit" */
+  .prop-tag { font-size: 9px; opacity: 0.72; }
+
+  .ob-true {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-family: 'Fira Mono', monospace;
+    font-size: 11px;
+    font-weight: 700;
+  }
+  .ob-true .arrow { color: #94a3b8; }
+  .ob-true .val {
+    background: var(--ok-bg);
+    color: var(--ok);
+    border: 1.5px solid var(--ok-br);
+    padding: 2px 9px;
+    border-radius: 6px;
+  }
+
+
+  /* ── Controls ───────────────────────────────────── */
+  #exec-ctrl {
+    display: flex;
+    gap: 8px;
+  }
+  #exec-ctrl button {
+    font-size: 11px;
+    font-weight: 600;
+    padding: 5px 14px;
+    border-radius: 6px;
+    border: 1.5px solid #e2e8f0;
+    background: white;
+    color: #475569;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  #exec-ctrl button:hover { background: #f1f5f9; }
+</style>
+</head>
+<body>
+
+<div id="exec-header">
+  <h2>Best Program Execution — p*</h2>
+  <p>Step-by-step execution of the synthesised program on a new image</p>
+</div>
+
+<div id="prog-block">
+  <span style="color:#64748b">p* = </span><span style="color:#9ca3af;font-weight:700">and</span>(<br>
+  &nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#d97706">exists_object</span>(<span style="color:#0d9488">get_objects</span>(<em style="color:#0d9488">IMG</em>),&nbsp;<span style="color:#60a5fa">cake</span>),<br>
+  &nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#d97706">exists_obj_with_property</span>(<span style="color:#0d9488">get_objects</span>(<em style="color:#0d9488">IMG</em>),&nbsp;<span style="color:#60a5fa">candles</span>,&nbsp;<span style="color:#60a5fa">lit</span>))
+</div>
+
+<!--
+  Left-to-right graph layout  (all x,y in px, container 690 × 295):
+
+  Col 0  Col 1          Col 2                           Col 3
+  [IMG] → [get_objects] → [exists_object(·, cake)     ] →\
+                       ↘                                    [and]
+                         [exists_obj_with_property(…)] →/
+
+  Node centres (cx, cy):
+    n-img : ( 58, 128)   n-get : (209, 128)
+    n-exo : (431,  54)   n-exp : (431, 214)
+    n-and : (624, 134)
+-->
+<div id="graph-wrap">
+
+  <svg id="gsvg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 690 295">
+    <defs>
+      <marker id="mh-def"  markerWidth="7" markerHeight="5" refX="6" refY="2.5" orient="auto">
+        <polygon points="0 0, 7 2.5, 0 5" fill="#e2e8f0"/>
+      </marker>
+      <marker id="mh-lit"  markerWidth="7" markerHeight="5" refX="6" refY="2.5" orient="auto">
+        <polygon points="0 0, 7 2.5, 0 5" fill="#7dd3fc"/>
+      </marker>
+      <marker id="mh-done" markerWidth="7" markerHeight="5" refX="6" refY="2.5" orient="auto">
+        <polygon points="0 0, 7 2.5, 0 5" fill="#86efac"/>
+      </marker>
+    </defs>
+
+    <!-- IMG → get_objects (horizontal) -->
+    <line id="gl-ig" class="gl" x1="104" y1="128" x2="124" y2="128" marker-end="url(#mh-def)"/>
+    <!-- get_objects → exists_object (up-right) -->
+    <line id="gl-ge" class="gl" x1="292" y1="128" x2="316" y2="56"  marker-end="url(#mh-def)"/>
+    <!-- get_objects → exists_obj_with_property (down-right) -->
+    <line id="gl-gp" class="gl" x1="292" y1="128" x2="316" y2="216" marker-end="url(#mh-def)"/>
+    <!-- exists_object → and (down-right) -->
+    <line id="gl-ea" class="gl" x1="544" y1="54"  x2="568" y2="132" marker-end="url(#mh-def)"/>
+    <!-- exists_obj_with_property → and (up-right) -->
+    <line id="gl-pa" class="gl" x1="544" y1="216" x2="568" y2="136" marker-end="url(#mh-def)"/>
+  </svg>
+
+  <!-- IMG node  (left=8, top=88, w=96) -->
+  <div class="nd img-nd" id="n-img" style="left:8px;top:88px;width:96px;">
+    <svg viewBox="0 0 60 60" width="88" height="68" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect width="60" height="60" fill="#f0fdf4" rx="3"/>
+      <ellipse cx="30" cy="54" rx="24" ry="4" fill="#d1d5db"/>
+      <rect x="8"  y="38" width="44" height="16" rx="3" fill="#4ade80"/>
+      <rect x="13" y="27" width="34" height="13" rx="2" fill="#86efac"/>
+      <rect x="19" y="18" width="22" height="10" rx="2" fill="#bbf7d0"/>
+      <rect x="23" y="7"  width="3"  height="11" rx="1" fill="#fde047"/>
+      <rect x="30" y="7"  width="3"  height="11" rx="1" fill="#f9a8d4"/>
+      <rect x="37" y="7"  width="3"  height="11" rx="1" fill="#a78bfa"/>
+      <ellipse cx="24.5" cy="5.5" rx="2" ry="3" fill="#f97316"/>
+      <ellipse cx="31.5" cy="5.5" rx="2" ry="3" fill="#f97316"/>
+      <ellipse cx="38.5" cy="5.5" rx="2" ry="3" fill="#f97316"/>
+    </svg>
+    <div class="lbl">IMG</div>
+  </div>
+
+  <!-- get_objects  (left=126, top=110, w=166) -->
+  <div class="nd vf" id="n-get" style="left:126px;top:110px;width:166px;text-align:center;">
+    <span style="color:#0d9488">get_objects</span>(<em style="color:#0d9488">IMG</em>)
+  </div>
+
+  <!-- exists_object  (left=318, top=30, w=226) -->
+  <div class="nd fn" id="n-exo" style="left:318px;top:30px;width:226px;white-space:normal;">
+    <span style="color:#b45309">exists_object</span>(<br>
+    &nbsp;&nbsp;<span style="color:#94a3b8">·</span>,&nbsp;<span style="color:#1d4ed8">cake</span>)
+  </div>
+
+  <!-- exists_obj_with_property  (left=318, top=192, w=226) -->
+  <div class="nd fn" id="n-exp" style="left:318px;top:192px;width:226px;white-space:normal;">
+    <span style="color:#b45309">exists_obj_with_property</span>(<br>
+    &nbsp;&nbsp;<span style="color:#94a3b8">·</span>,&nbsp;<span style="color:#1d4ed8">candles</span>,&nbsp;<span style="color:#1d4ed8">lit</span>)
+  </div>
+
+  <!-- and  (left=572, top=116, w=104) -->
+  <div class="nd kw" id="n-and" style="left:572px;top:116px;width:104px;text-align:center;">
+    <span style="color:#4b5563;font-weight:700">and</span>(·,·)
+  </div>
+
+  <!-- ── Output badges ────────────────────────────── -->
+
+  <!-- get_objects → returned objects (below node) -->
+  <div class="ob" id="ob-get" style="left:126px;top:152px;">
+    <div class="ob-chips">
+      <span class="oc" id="oc-cake">cake <span class="prop-tag">· layered</span></span>
+      <span class="oc" id="oc-candles">candles <span class="prop-tag">· lit</span></span>
+      <span class="oc">fire <span class="prop-tag">· orange</span></span>
+    </div>
+  </div>
+
+  <!-- exists_object → True (below exo, above the gap) -->
+  <div class="ob" id="ob-exo" style="left:318px;top:84px;">
+    <div class="ob-true"><span class="arrow">→</span><span class="val">True</span></div>
+  </div>
+
+  <!-- exists_obj_with_property → True (below exp) -->
+  <div class="ob" id="ob-exp" style="left:318px;top:248px;">
+    <div class="ob-true"><span class="arrow">→</span><span class="val">True</span></div>
+  </div>
+
+  <!-- and → True (below and) -->
+  <div class="ob" id="ob-and" style="left:575px;top:158px;">
+    <div class="ob-true"><span class="arrow">→</span><span class="val">True</span></div>
+  </div>
+
+</div><!-- /graph-wrap -->
+
+<div id="exec-ctrl">
+  <button id="btn-stop">⏸ Stop</button>
+  <button id="btn-replay">↺ Replay</button>
+</div>
+
+<script>
+  const g = id => document.getElementById(id);
+
+  /* ── Iframe detection ─────────────────────────── */
+  if (window.self !== window.top) document.body.classList.add('in-iframe');
+
+  function reportSize() {
+    if (window.self === window.top) return;
+    window.parent.postMessage({
+      type:   'vlp-exec-resize',
+      height: document.body.scrollHeight,
+      width:  document.body.scrollWidth
+    }, '*');
+  }
+
+  /* ── Node / line helpers ──────────────────────── */
+  function nd(id, state) {
+    const el = g(id);
+    if (!el) return;
+    el.classList.remove('vis', 'act', 'done');
+    if (state) el.classList.add(state);
+  }
+
+  function gl(id, state) {
+    const el = g(id);
+    if (!el) return;
+    el.classList.remove('lit', 'done');
+    if (state) el.classList.add(state);
+    const m = { lit: 'mh-lit', done: 'mh-done' }[state] || 'mh-def';
+    el.setAttribute('marker-end', `url(#${m})`);
+  }
+
+  const showOb = id => g(id)?.classList.add('show');
+  const hideOb = id => g(id)?.classList.remove('show');
+
+  /* ── Timer system (pause/resume) ─────────────── */
+  let timers = [], stopped = false, pausedAt = 0;
+  let animStart = 0, schedule = [];
+
+  function t(fn, delay) {
+    const absTime = animStart + delay;
+    const entry = { fn, absTime, fired: false };
+    schedule.push(entry);
+    const id = setTimeout(() => { if (!entry.fired) { entry.fired = true; fn(); } }, delay);
+    timers.push(id);
+  }
+
+  function cancelAll() { timers.forEach(clearTimeout); timers = []; }
+
+  /* ── Scene reset ──────────────────────────────── */
+  function reset() {
+    schedule = [];
+    ['n-and','n-exo','n-exp','n-get','n-img'].forEach(id => nd(id, 'vis'));
+    ['gl-ig','gl-ge','gl-gp','gl-ea','gl-pa'].forEach(id => gl(id, null));
+    ['ob-get','ob-exo','ob-exp','ob-and'].forEach(hideOb);
+    g('oc-cake').classList.remove('match');
+    g('oc-candles').classList.remove('match');
+  }
+
+  /* ── Main animation (left → right execution) ─── */
+  function runAnim() {
+    cancelAll();
+    reset();
+    stopped = false;
+    g('btn-stop').textContent = '⏸ Stop';
+    animStart = performance.now();
+    schedule = [];
+
+    // 1 – IMG activates
+    t(() => { nd('n-img', 'act'); }, 500);
+
+    // 2 – get_objects receives IMG, executes
+    t(() => {
+      nd('n-img', 'done');
+      gl('gl-ig', 'lit');
+      nd('n-get', 'act');
+    }, 1300);
+
+    // 3 – get_objects returns object list
+    t(() => { showOb('ob-get'); }, 1950);
+
+    // 4 – get_objects done; result fans out to both branches
+    t(() => {
+      nd('n-get', 'done');
+      gl('gl-ig', 'done');
+      gl('gl-ge', 'lit');
+      gl('gl-gp', 'lit');
+    }, 2650);
+
+    // 5 – exists_object checks for "cake"
+    t(() => {
+      nd('n-exo', 'act');
+      g('oc-cake').classList.add('match');
+    }, 3350);
+
+    // 6 – exists_object returns True, passes result to and
+    t(() => {
+      showOb('ob-exo');
+      nd('n-exo', 'done');
+      gl('gl-ge', 'done');
+      gl('gl-ea', 'lit');
+    }, 4150);
+
+    // 7 – exists_obj_with_property checks for lit candles
+    t(() => {
+      nd('n-exp', 'act');
+      g('oc-candles').classList.add('match');
+    }, 4850);
+
+    // 8 – exists_obj_with_property returns True, passes result to and
+    t(() => {
+      showOb('ob-exp');
+      nd('n-exp', 'done');
+      gl('gl-gp', 'done');
+      gl('gl-pa', 'lit');
+    }, 5650);
+
+    // 9 – and combines both True values
+    t(() => { nd('n-and', 'act'); }, 6350);
+
+    // 10 – and returns True
+    t(() => {
+      showOb('ob-and');
+      nd('n-and', 'done');
+      gl('gl-ea', 'done');
+      gl('gl-pa', 'done');
+    }, 7050);
+
+    // Report iframe size
+    t(() => { reportSize(); }, 8100);
+
+    // Auto-loop
+    t(() => { if (!stopped) runAnim(); }, 12000);
+  }
+
+  /* ── Controls ─────────────────────────────────── */
+  g('btn-stop').addEventListener('click', () => {
+    if (stopped) {
+      stopped = false;
+      g('btn-stop').textContent = '⏸ Stop';
+      const now = performance.now();
+      animStart += now - pausedAt;
+      schedule.forEach(entry => {
+        if (!entry.fired) {
+          const delay = Math.max(0, entry.absTime - now);
+          const id = setTimeout(() => { if (!entry.fired) { entry.fired = true; entry.fn(); } }, delay);
+          timers.push(id);
+        }
+      });
+    } else {
+      stopped = true;
+      pausedAt = performance.now();
+      cancelAll();
+      g('btn-stop').textContent = '▶ Play';
+    }
+  });
+
+  g('btn-replay').addEventListener('click', () => { runAnim(); });
+
+  runAnim();
+</script>
+</body>
+</html>
